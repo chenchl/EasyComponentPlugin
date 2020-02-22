@@ -132,14 +132,14 @@ class EasyComponent implements Plugin<Project> {
                  * 示例语法:groupId:artifactId:version(@aar)
                  * implementation "com.squareup.picasso:picasso:2.71828"
                  */
-                project.dependencies.add("maven implementation", str)
+                project.dependencies.add("implementation", str)
                 System.out.println("add dependencies lib:" + str)
             } else {
                 /**
                  * 示例语法:module
                  * implementation project(':baseCommon')
                  */
-                project.dependencies.add("local implementation", project.project(':' + str))
+                project.dependencies.add("implementation", project.project(':' + str))
                 System.out.println("add dependencies project : " + str)
             }
         }
