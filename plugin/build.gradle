@@ -1,0 +1,30 @@
+apply plugin: 'groovy'
+//apply plugin: 'maven'
+apply plugin: 'com.github.dcendents.android-maven'
+group='cn.chenchl.easycomponent'
+
+dependencies {
+    //gradle sdk
+    implementation gradleApi()
+    //groovy sdk
+    implementation localGroovy()
+}
+
+/*
+uploadArchives {
+    configuration = configurations.archives
+    repositories {
+        mavenDeployer {
+            // 仓库路径（只能是hosted仓库）
+            repository(url: 'http://localhost:8088/repository/chenchl/') {
+                // 你 Nexus 的账户密码
+                authentication(userName: 'admin', password: '891107ccl')
+            }
+            pom.project {
+                version '0.2.3'
+                artifactId 'EasyComponent'
+                groupId 'cn.chenchl'
+            }
+        }
+    }
+}*/
