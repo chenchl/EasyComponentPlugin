@@ -96,14 +96,14 @@ class ComponentInitTransform extends Transform {
             throw new RuntimeException("You must to set AppName notNull in module's gradle.properties")
         }
         this.appName = appName
-        System.out.println("the application class is ${name} ")
+        System.out.println("the application class is ${this.appName} ")
     }
 
     static void handleDirectoryInput(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
         if (directoryInput.file.isDirectory()) {
             //遍历所有文件
             directoryInput.file.eachFileRecurse {
-                String name = it.path
+                String name = it.name
                 if (checkClassFile(name)) {//需要去处理
                     //asm 读取类信息
                     ClassReader cr = new ClassReader(it.bytes)
@@ -113,7 +113,7 @@ class ComponentInitTransform extends Transform {
                     //获取类接口信息
                     cr.getInterfaces().each {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
-                            System.out.println("the class ${name} impl IEasyInit")
+                            System.out.println("the class ${cr.className} impl IEasyInit")
                             InitClass initClass = new InitClass()
                             initClass.className = name
                             //listInit.add(initClass)
