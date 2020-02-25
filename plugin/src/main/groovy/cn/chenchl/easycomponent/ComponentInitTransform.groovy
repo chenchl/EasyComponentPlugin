@@ -85,10 +85,10 @@ class ComponentInitTransform extends Transform {
     }
 
     void getApplicationClassName() {
-        if (!project.hasProperty("AppName")) {
+        if (!project.hasProperty("appName")) {
             throw new RuntimeException("You must to set AppName in module's gradle.properties")
         }
-        String appName = project.properties.get("AppName")
+        String appName = project.properties.get("appName")
         if (appName == null || appName.isEmpty()) {
             throw new RuntimeException("You must to set AppName notNull in module's gradle.properties")
         }
