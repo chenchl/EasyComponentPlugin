@@ -5,6 +5,9 @@ import com.android.build.gradle.AppExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
+/**
+ * created by ccl on 2020/2/25
+ **/
 class EasyComponent implements Plugin<Project> {
 
     //默认是app，直接运行assembleRelease的时候，等同于运行app:assembleRelease

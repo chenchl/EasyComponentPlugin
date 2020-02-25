@@ -7,12 +7,14 @@ import org.objectweb.asm.Opcodes
 /**
  * created by ccl on 2020/2/25
  **/
-class LifecycleClassVisitor extends ClassVisitor {
+class AppAutoInitClassVisitor extends ClassVisitor {
 
-    private String mClassName;
+    private String mClassName
+    private ArrayList<ComponentInitTransform.InitClass> list
 
-    LifecycleClassVisitor(ClassVisitor cv) {
+    AppAutoInitClassVisitor(ClassVisitor cv, List<ComponentInitTransform.InitClass> list) {
         super(Opcodes.ASM5, cv)
+        this.list = list
     }
 
     @Override
@@ -23,6 +25,12 @@ class LifecycleClassVisitor extends ClassVisitor {
 
     @Override
     MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        return super.visitMethod(access, name, desc, signature, exceptions)
+        MethodVisitor mv = cv.visitMethod(access, name, desc, signature, exceptions)
+        //在方法onCreate里插入
+        if ("onCreate" == name) {
+            System.out.println("AppAutoInitClassVisitor : inject method ----> " + name)
+            return new AppOnCreateMethodVisitor(mv, list)
+        }
+        return mv
     }
 }

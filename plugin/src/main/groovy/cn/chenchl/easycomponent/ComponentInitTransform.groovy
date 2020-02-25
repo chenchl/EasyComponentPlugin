@@ -12,6 +12,9 @@ import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES
 
+/**
+ * created by ccl on 2020/2/25
+ **/
 class ComponentInitTransform extends Transform {
 
     private Project project
@@ -137,7 +140,7 @@ class ComponentInitTransform extends Transform {
             //将遍历得到的实现了IEasyInit接口的类插入到application的onCreate当中
             ClassReader cr = new ClassReader(this.appFile.bytes)
             ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS)
-            ClassVisitor cv = new LifecycleClassVisitor(cw)
+            ClassVisitor cv = new AppAutoInitClassVisitor(cw,listInit)
             cr.accept(cv, EXPAND_FRAMES)
             byte[] code = cw.toByteArray()
             FileOutputStream fos = new FileOutputStream(
