@@ -96,6 +96,7 @@ class ComponentInitTransform extends Transform {
             throw new RuntimeException("You must to set AppName notNull in module's gradle.properties")
         }
         this.appName = appName
+        System.out.println("the application class is ${name} ")
     }
 
     static void handleDirectoryInput(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
@@ -115,7 +116,7 @@ class ComponentInitTransform extends Transform {
                             System.out.println("the class ${name} impl IEasyInit")
                             InitClass initClass = new InitClass()
                             initClass.className = name
-                            listInit.add(initClass)
+                            //listInit.add(initClass)
                         }
                     }
                     //asm 写入类信息
