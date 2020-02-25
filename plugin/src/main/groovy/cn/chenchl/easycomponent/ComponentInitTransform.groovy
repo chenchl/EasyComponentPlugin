@@ -4,8 +4,8 @@ import com.android.annotations.NonNull
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
+import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.Project
-import org.gradle.internal.impldep.org.apache.commons.codec.digest.DigestUtils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.tree.ClassNode
 
