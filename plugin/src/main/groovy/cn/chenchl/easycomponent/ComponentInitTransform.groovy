@@ -13,9 +13,11 @@ class ComponentInitTransform extends Transform {
 
     private Project project
     private String appName
+    private List<InitClass> listInit
 
     ComponentInitTransform(Project project) {
         this.project = project
+        listInit = new ArrayList<>()
     }
 
     @Override
@@ -100,7 +102,7 @@ class ComponentInitTransform extends Transform {
         if (directoryInput.file.isDirectory()) {
             //遍历所有文件
             directoryInput.file.eachFileRecurse {
-                String name = it.name
+                String name = it.path
                 if (checkClassFile(name)) {//需要去处理
                     //asm 读取类信息
                     ClassReader cr = new ClassReader(it.bytes)
@@ -111,6 +113,9 @@ class ComponentInitTransform extends Transform {
                     cr.getInterfaces().each {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
                             System.out.println("the class ${name} impl IEasyInit")
+                            InitClass initClass = new InitClass()
+                            initClass.className = name
+                            listInit.add(initClass)
                         }
                     }
                     //asm 写入类信息
@@ -153,6 +158,10 @@ class ComponentInitTransform extends Transform {
         //只处理需要的class文件
         return (name.endsWith(".class") && !name.startsWith("R\$")
                 && "R.class" != name && "BuildConfig.class" != name)
+    }
+
+    private class InitClass {
+        String className
     }
 
 }
