@@ -6,6 +6,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
 import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
+import org.objectweb.asm.tree.ClassNode
 
 class ComponentInitTransform extends Transform {
 
@@ -83,7 +84,7 @@ class ComponentInitTransform extends Transform {
 
     }
 
-    getApplicationClassName() {
+    void getApplicationClassName() {
         if (!project.hasProperty("AppName")) {
             throw new RuntimeException("You must to set AppName in module's gradle.properties")
         }
@@ -94,7 +95,7 @@ class ComponentInitTransform extends Transform {
         this.appName = appName
     }
 
-    static handleDirectoryInput(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
+    static void handleDirectoryInput(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
         if (directoryInput.file.isDirectory()) {
             //遍历所有文件
             directoryInput.file.eachFileRecurse {
@@ -102,6 +103,9 @@ class ComponentInitTransform extends Transform {
                 if (checkClassFile(name)) {//需要去处理
                     //asm 读取类信息
                     ClassReader cr = new ClassReader(it.bytes)
+                    ClassNode cn = new ClassNode()
+                    cr.accept(cn,0)
+                    cn.visibleAnnotations
                     //获取类接口信息
                     cr.getInterfaces().each {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
