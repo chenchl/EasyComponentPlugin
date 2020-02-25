@@ -5,6 +5,7 @@ import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
 import org.gradle.api.Project
+import org.gradle.internal.impldep.org.apache.commons.codec.digest.DigestUtils
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.tree.ClassNode
 
@@ -76,7 +77,7 @@ class ComponentInitTransform extends Transform {
             //todo：学习中未来再做
             //遍历jar文件
             it.jarInputs.each {
-
+                handleJarInputs(it, outputProvider)
             }
         }
         def endTime = System.currentTimeMillis()
@@ -104,7 +105,7 @@ class ComponentInitTransform extends Transform {
                     //asm 读取类信息
                     ClassReader cr = new ClassReader(it.bytes)
                     ClassNode cn = new ClassNode()
-                    cr.accept(cn,0)
+                    cr.accept(cn, 0)
                     cn.visibleAnnotations
                     //获取类接口信息
                     cr.getInterfaces().each {
@@ -123,6 +124,24 @@ class ComponentInitTransform extends Transform {
                 directoryInput.contentTypes, directoryInput.scopes,
                 Format.DIRECTORY)
         FileUtils.copyDirectory(directoryInput.file, dest)
+    }
+
+    /**
+     * 处理Jar中的class文件
+     */
+    static void handleJarInputs(JarInput jarInput, TransformOutputProvider outputProvider) {
+        //jar文件一般是第三方依赖库jar文件
+        // 重命名输出文件（同目录copyFile会冲突）
+        def jarName = jarInput.name
+        def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
+        if (jarName.endsWith(".jar")) {
+            jarName = jarName.substring(0, jarName.length() - 4)
+        }
+        //生成输出路径
+        def dest = outputProvider.getContentLocation(jarName + md5Name,
+                jarInput.contentTypes, jarInput.scopes, Format.JAR)
+        //将输入内容复制到输出
+        FileUtils.copyFile(jarInput.file, dest)
     }
 
     /**
