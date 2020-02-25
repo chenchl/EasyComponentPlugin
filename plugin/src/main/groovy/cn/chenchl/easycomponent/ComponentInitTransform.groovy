@@ -103,7 +103,7 @@ class ComponentInitTransform extends Transform {
         System.out.println("the application class is ${this.appName} ")
     }
 
-    static void handleDirectoryInput(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
+    void handleDirectoryInput(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
         if (directoryInput.file.isDirectory()) {
             //遍历所有文件
             directoryInput.file.eachFileRecurse {
@@ -155,7 +155,7 @@ class ComponentInitTransform extends Transform {
     /**
      * 处理Jar中的class文件
      */
-    static void handleJarInputs(JarInput jarInput, TransformOutputProvider outputProvider) {
+    void handleJarInputs(JarInput jarInput, TransformOutputProvider outputProvider) {
         //jar文件一般是第三方依赖库jar文件
         // 重命名输出文件（同目录copyFile会冲突）
         def jarName = jarInput.name
@@ -176,7 +176,7 @@ class ComponentInitTransform extends Transform {
      * @param fileName
      * @return
      */
-    static boolean checkClassFile(String name) {
+    boolean checkClassFile(String name) {
         //只处理需要的class文件
         return (name.endsWith(".class") && !name.startsWith("R\$")
                 && "R.class" != name && "BuildConfig.class" != name)
