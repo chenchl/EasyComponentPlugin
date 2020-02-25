@@ -89,7 +89,7 @@ class EasyComponent implements Plugin<Project> {
                 implementationComponents(assembleTask, project)
                 //asm插入各模块的初始化代码到主module的application里
                 def android = project.extensions.getByType(AppExtension)
-                android.registerTransform(new ComponentInitTransform())
+                android.registerTransform(new ComponentInitTransform(project))
             }
         } else {
             project.apply plugin: 'com.android.library'//当前module作为依赖组件被集成只需要改配置为com.android.library
