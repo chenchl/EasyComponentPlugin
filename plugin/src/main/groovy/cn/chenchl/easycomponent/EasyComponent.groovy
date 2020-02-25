@@ -1,6 +1,7 @@
 package cn.chenchl.easycomponent
 
 import cn.chenchl.easycomponent.utils.StringUtil
+import com.android.build.gradle.AppExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -86,6 +87,9 @@ class EasyComponent implements Plugin<Project> {
             System.out.println("apply plugin is " + 'com.android.application')
             if (assembleTask.isAssemble && module == compileModule) {//自动根据配置引入其他模块的依赖
                 implementationComponents(assembleTask, project)
+                //asm插入各模块的初始化代码到主module的application里
+                def android = project.extensions.getByType(AppExtension)
+                android.registerTransform(new ComponentInitTransform())
             }
         } else {
             project.apply plugin: 'com.android.library'//当前module作为依赖组件被集成只需要改配置为com.android.library
