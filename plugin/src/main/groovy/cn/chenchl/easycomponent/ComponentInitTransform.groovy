@@ -160,7 +160,7 @@ class ComponentInitTransform extends Transform {
                 && "R.class" != name && "BuildConfig.class" != name)
     }
 
-    private class InitClass {
+    private static class InitClass {
         String className
     }
 
