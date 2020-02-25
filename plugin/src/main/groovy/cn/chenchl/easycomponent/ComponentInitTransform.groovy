@@ -111,7 +111,6 @@ class ComponentInitTransform extends Transform {
                     cr.getInterfaces().each {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
                             System.out.println("the class ${name} impl IEasyInit")
-                            return
                         }
                     }
                     //asm 写入类信息
