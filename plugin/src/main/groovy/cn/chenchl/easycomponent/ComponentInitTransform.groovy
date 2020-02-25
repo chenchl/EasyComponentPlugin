@@ -7,12 +7,16 @@ import com.android.utils.FileUtils
 import org.apache.commons.codec.digest.DigestUtils
 import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
+import org.objectweb.asm.ClassVisitor
+import org.objectweb.asm.ClassWriter
 import org.objectweb.asm.tree.ClassNode
+import static org.objectweb.asm.ClassReader.EXPAND_FRAMES
 
 class ComponentInitTransform extends Transform {
 
     private Project project
     private String appName
+    private File appFile
     private List<InitClass> listInit
 
     ComponentInitTransform(Project project) {
@@ -107,6 +111,12 @@ class ComponentInitTransform extends Transform {
                 if (checkClassFile(name)) {//需要去处理
                     //asm 读取类信息
                     ClassReader cr = new ClassReader(it.bytes)
+                    //先记录appName对应文件的路径
+                    if (cr.className.replaceAll("/", ".") == appName) {//是application时记录并跳出本次循环
+                        this.appFile = it
+                        System.out.println("the class ${cr.className} is application")
+                        return true
+                    }
                     ClassNode cn = new ClassNode()
                     cr.accept(cn, 0)
                     cn.visibleAnnotations
@@ -115,14 +125,25 @@ class ComponentInitTransform extends Transform {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
                             System.out.println("the class ${cr.className} impl IEasyInit")
                             InitClass initClass = new InitClass()
-                            initClass.className = name
-                            //listInit.add(initClass)
+                            initClass.className = cr.className
+                            listInit.add(initClass)
+                            return true
                         }
                     }
                     //asm 写入类信息
                     //ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
                 }
             }
+            //将遍历得到的实现了IEasyInit接口的类插入到application的onCreate当中
+            ClassReader cr = new ClassReader(this.appFile.bytes)
+            ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS)
+            ClassVisitor cv = new LifecycleClassVisitor(cw)
+            cr.accept(cv, EXPAND_FRAMES)
+            byte[] code = cw.toByteArray()
+            FileOutputStream fos = new FileOutputStream(
+                    this.appFile.parentFile.absolutePath + File.separator + this.appFile.name)
+            fos.write(code)
+            fos.close()
         }
         //处理完输入文件之后，要把输出给下一个任务
         def dest = outputProvider.getContentLocation(directoryInput.name,
@@ -161,7 +182,7 @@ class ComponentInitTransform extends Transform {
                 && "R.class" != name && "BuildConfig.class" != name)
     }
 
-    private static class InitClass {
+    static class InitClass {
         String className
     }
 
