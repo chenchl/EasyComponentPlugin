@@ -58,7 +58,7 @@ class ComponentInitTransform extends Transform {
         System.out.println("ComponentInit transform start")
         def startTime = System.currentTimeMillis()
         //step1 获取application的classname
-        getApplicationClassName(project)
+        getApplicationClassName()
         //拿到所有class的集合
         Collection<TransformInput> inputs = transformInvocation.inputs
         //删除之前的输出
