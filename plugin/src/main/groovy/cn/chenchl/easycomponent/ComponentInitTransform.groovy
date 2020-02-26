@@ -93,7 +93,11 @@ class ComponentInitTransform extends Transform {
             }
         }
         //插入代码
-        injectInitCodeByASM()
+        inputs.each {
+            it.directoryInputs.each {
+                injectInitCodeByASM(it, outputProvider)
+            }
+        }
         def endTime = System.currentTimeMillis()
         System.out.println("ComponentInit transform end castTime = ${endTime - startTime}")
 
@@ -194,7 +198,10 @@ class ComponentInitTransform extends Transform {
         FileUtils.copyFile(jarInput.file, dest)
     }
 
-    void injectInitCodeByASM() {
+    void injectInitCodeByASM(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
+        listInit.each {
+            System.out.println("init class is ${it.className}")
+        }
         //将遍历得到的实现了IEasyInit接口的类插入到application的onCreate当中
         ClassReader cr = new ClassReader(this.appFile.bytes)
         ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS)
@@ -205,6 +212,11 @@ class ComponentInitTransform extends Transform {
                 this.appFile.parentFile.absolutePath + File.separator + this.appFile.name)
         fos.write(code)
         fos.close()
+        //处理完输入文件之后，要把输出给下一个任务
+        def dest = outputProvider.getContentLocation(directoryInput.name,
+                directoryInput.contentTypes, directoryInput.scopes,
+                Format.DIRECTORY)
+        FileUtils.copyDirectory(directoryInput.file, dest)
     }
 
     /**
