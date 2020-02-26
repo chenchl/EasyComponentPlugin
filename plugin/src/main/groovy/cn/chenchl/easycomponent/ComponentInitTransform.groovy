@@ -82,20 +82,14 @@ class ComponentInitTransform extends Transform {
             outputProvider.deleteAll()
         //step2 遍历所有class
         inputs.each {
-            //遍历源码文件夹
-            it.directoryInputs.each {
-                handleDirectoryInput(it, outputProvider)
-            }
-
             //遍历jar文件
             it.jarInputs.each {
                 handleJarInputs(it, outputProvider)
             }
-        }
-        //插入代码
-        inputs.each {
+
+            //遍历源码文件夹
             it.directoryInputs.each {
-                injectInitCodeByASM(it, outputProvider)
+                handleDirectoryInput(it, outputProvider)
             }
         }
         def endTime = System.currentTimeMillis()
@@ -141,6 +135,8 @@ class ComponentInitTransform extends Transform {
                     }
                 }
             }
+            //插入代码
+            injectInitCodeByASM()
         }
         //处理完输入文件之后，要把输出给下一个任务
         def dest = outputProvider.getContentLocation(directoryInput.name,
@@ -198,7 +194,7 @@ class ComponentInitTransform extends Transform {
         FileUtils.copyFile(jarInput.file, dest)
     }
 
-    void injectInitCodeByASM(DirectoryInput directoryInput, TransformOutputProvider outputProvider) {
+    void injectInitCodeByASM() {
         listInit.each {
             System.out.println("init class is ${it.className}")
         }
@@ -212,11 +208,6 @@ class ComponentInitTransform extends Transform {
                 this.appFile.parentFile.absolutePath + File.separator + this.appFile.name)
         fos.write(code)
         fos.close()
-        //处理完输入文件之后，要把输出给下一个任务
-        def dest = outputProvider.getContentLocation(directoryInput.name,
-                directoryInput.contentTypes, directoryInput.scopes,
-                Format.DIRECTORY)
-        FileUtils.copyDirectory(directoryInput.file, dest)
     }
 
     /**
