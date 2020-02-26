@@ -188,7 +188,7 @@ class ComponentInitTransform extends Transform {
         //关闭文件流
         jarFile.close()
         //生成输出路径
-        def dest = transformInvocation.outputProvider.getContentLocation(jarName + md5Name,
+        def dest = outputProvider.getContentLocation(jarName + md5Name,
                 jarInput.contentTypes, jarInput.scopes, Format.JAR)
         //将输入内容复制到输出
         FileUtils.copyFile(jarInput.file, dest)
