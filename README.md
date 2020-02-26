@@ -5,6 +5,11 @@
 
 [Demo地址](https://github.com/chenchl/EasyComponent)
 
+### 更新日志
+
+- 0.4.0 新增自动插入初始化代码到application的处理 使用gradle transform+asm实现
+- 0.2.0 初次发布
+
 ### 使用方法
 
 - step1：在工程根目录的build.gradle文件中添加如下内容并同步工程后插件即被引用成功
@@ -17,7 +22,7 @@
           maven { url 'https://jitpack.io' }
       }
       dependencies {
-          classpath 'com.github.chenchl:EasyComponentPlugin:0.1.0'
+          classpath 'com.github.chenchl:EasyComponentPlugin:0.4.0'
       }
   }
   ```
@@ -53,7 +58,38 @@
 
   ![运行示例](https://github.com/chenchl/EasyComponentPlugin/blob/master/img1.png)
 
-### 注意事项
+#### 注意事项
 
 - 不要使用build- >build Bundle(s)/Apk(s)直接打包，原因是gradle task顺序不一定会导致无法找到需要打包的module是哪一个
 - 在使用build- >Generate signed Bundle/Apk时注意不要同时选择debug和release任务一起处理，这样会导致debug和release引入的组件变的一致 使我们之前设置的debugComponent/releaseComponent 配置失效
+
+### 自动化插入模块初始化代码到Application
+
+- step1：在baselib module目录的build.gradle文件中添加如下内容并同步工程后即被引用成功
+
+  ```groovy
+  dependencies {
+      api 'com.github.chenchl.EasyComponentPlugin:lib:0.4.0'
+  }
+  ```
+
+- step2：在host module 以及需要被独立调试运行的module目录的gradle.properties文件中添加如下内容
+
+  ```properties
+  # 指定需要被插入初始化代码的application实现类
+  appName=cn.chenchl.easycomponent.App
+  ```
+
+- step3：在需要执行初始化代码的module中创建对应继承IEasyInit接口的class实现类，并将初始化代码写在init方法中
+
+  ```java
+  public class ComponentAInit implements IEasyInit {
+      @Override
+      public void init(Context context) {
+          Log.e("Component","init A");
+      }
+  }
+  ```
+
+- step4：编译运行项目即可 这时各module中实现了IEasyInit接口的初始化代码会被自动插入到application的onCreate代码中。
+
