@@ -21,11 +21,11 @@ class AppOnCreateMethodVisitor extends MethodVisitor {
         super.visitCode()
         //遍历插入
         list.each {
-            mv.visitTypeInsn(Opcodes.NEW, it.className);
-            mv.visitInsn(Opcodes.DUP);
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, it.className, "<init>", "()V", false);
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, it.className, "init", "(Landroid/content/Context;)V", false);
+            mv.visitTypeInsn(Opcodes.NEW, it.className)
+            mv.visitInsn(Opcodes.DUP)
+            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, it.className, "<init>", "()V", false)
+            mv.visitVarInsn(Opcodes.ALOAD, 0)
+            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, it.className, "init", "(Landroid/content/Context;)V", false)
         }
         //方法执行前插入
        /* mv.visitLdcInsn("TAG");

@@ -5,11 +5,15 @@ import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
 import com.android.utils.FileUtils
 import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.io.IOUtils
 import org.gradle.api.Project
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
-import org.objectweb.asm.tree.ClassNode
+
+import java.util.jar.JarEntry
+import java.util.jar.JarFile
+
 import static org.objectweb.asm.ClassReader.EXPAND_FRAMES
 
 /**
@@ -83,12 +87,13 @@ class ComponentInitTransform extends Transform {
                 handleDirectoryInput(it, outputProvider)
             }
 
-            //todo：学习中未来再做
             //遍历jar文件
             it.jarInputs.each {
                 handleJarInputs(it, outputProvider)
             }
         }
+        //插入代码
+        injectInitCodeByASM()
         def endTime = System.currentTimeMillis()
         System.out.println("ComponentInit transform end castTime = ${endTime - startTime}")
 
@@ -120,9 +125,6 @@ class ComponentInitTransform extends Transform {
                         System.out.println("the class ${cr.className} is application")
                         return true
                     }
-                    ClassNode cn = new ClassNode()
-                    cr.accept(cn, 0)
-                    cn.visibleAnnotations
                     //获取类接口信息
                     cr.getInterfaces().each {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
@@ -133,20 +135,8 @@ class ComponentInitTransform extends Transform {
                             return true
                         }
                     }
-                    //asm 写入类信息
-                    //ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_MAXS)
                 }
             }
-            //将遍历得到的实现了IEasyInit接口的类插入到application的onCreate当中
-            ClassReader cr = new ClassReader(this.appFile.bytes)
-            ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS)
-            ClassVisitor cv = new AppAutoInitClassVisitor(cw,listInit)
-            cr.accept(cv, EXPAND_FRAMES)
-            byte[] code = cw.toByteArray()
-            FileOutputStream fos = new FileOutputStream(
-                    this.appFile.parentFile.absolutePath + File.separator + this.appFile.name)
-            fos.write(code)
-            fos.close()
         }
         //处理完输入文件之后，要把输出给下一个任务
         def dest = outputProvider.getContentLocation(directoryInput.name,
@@ -159,18 +149,62 @@ class ComponentInitTransform extends Transform {
      * 处理Jar中的class文件
      */
     void handleJarInputs(JarInput jarInput, TransformOutputProvider outputProvider) {
-        //jar文件一般是第三方依赖库jar文件
         // 重命名输出文件（同目录copyFile会冲突）
         def jarName = jarInput.name
         def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
         if (jarName.endsWith(".jar")) {
             jarName = jarName.substring(0, jarName.length() - 4)
         }
+        //处理jar文件
+        JarFile jarFile = new JarFile(jarInput.file)
+        Enumeration enumeration = jarFile.entries()
+        //用于保存
+        while (enumeration.hasMoreElements()) {
+            //读取jar包中的文件
+            JarEntry jarEntry = (JarEntry) enumeration.nextElement()
+            String entryName = jarEntry.getName()
+            InputStream inputStream = jarFile.getInputStream(jarEntry)
+            //读取实现了IEasyInit的class记录到listInit中
+            if (checkClassFile(entryName)) {
+                //class文件处理
+                System.out.println("deal with \"jar\" class file = ${entryName}")
+                ClassReader cr = new ClassReader(IOUtils.toByteArray(inputStream))
+                if (cr.className.replaceAll("/", ".") == appName) {//是application时跳出本次循环
+                    System.out.println("the class ${cr.className} is application")
+                    continue
+                }
+                //获取类接口信息
+                cr.getInterfaces().each {
+                    if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
+                        System.out.println("the class ${cr.className} impl IEasyInit")
+                        InitClass initClass = new InitClass()
+                        initClass.className = cr.className
+                        listInit.add(initClass)
+                        return true
+                    }
+                }
+            }
+        }
+        //关闭文件流
+        jarFile.close()
         //生成输出路径
-        def dest = outputProvider.getContentLocation(jarName + md5Name,
+        def dest = transformInvocation.outputProvider.getContentLocation(jarName + md5Name,
                 jarInput.contentTypes, jarInput.scopes, Format.JAR)
         //将输入内容复制到输出
         FileUtils.copyFile(jarInput.file, dest)
+    }
+
+    void injectInitCodeByASM() {
+        //将遍历得到的实现了IEasyInit接口的类插入到application的onCreate当中
+        ClassReader cr = new ClassReader(this.appFile.bytes)
+        ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS)
+        ClassVisitor cv = new AppAutoInitClassVisitor(cw, listInit)
+        cr.accept(cv, EXPAND_FRAMES)
+        byte[] code = cw.toByteArray()
+        FileOutputStream fos = new FileOutputStream(
+                this.appFile.parentFile.absolutePath + File.separator + this.appFile.name)
+        fos.write(code)
+        fos.close()
     }
 
     /**
