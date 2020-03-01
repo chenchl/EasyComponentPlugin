@@ -7,9 +7,12 @@ import com.android.utils.FileUtils
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.IOUtils
 import org.gradle.api.Project
+import org.jetbrains.annotations.NotNull
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.ClassVisitor
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.tree.AnnotationNode
+import org.objectweb.asm.tree.ClassNode
 
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
@@ -127,12 +130,14 @@ class ComponentInitTransform extends Transform {
                         System.out.println("the class ${cr.className} is application")
                         return true
                     }
-                    //获取类接口信息
                     cr.getInterfaces().each {
                         if (it.contains('IEasyInit')) {//只处理实现了指定接口的类
                             System.out.println("the class ${cr.className} impl IEasyInit")
                             InitClass initClass = new InitClass()
                             initClass.className = cr.className
+                            //获取优先级
+                            int priority = getAnnotationInfo(cr)
+                            initClass.priority = priority
                             listInit.add(initClass)
                             return true
                         }
@@ -182,6 +187,9 @@ class ComponentInitTransform extends Transform {
                         System.out.println("the class ${cr.className} impl IEasyInit")
                         InitClass initClass = new InitClass()
                         initClass.className = cr.className
+                        //获取优先级
+                        int priority = getAnnotationInfo(cr)
+                        initClass.priority = priority
                         listInit.add(initClass)
                         return true
                     }
@@ -197,7 +205,35 @@ class ComponentInitTransform extends Transform {
         FileUtils.copyFile(jarInput.file, dest)
     }
 
+
+    private int getAnnotationInfo(ClassReader cr) {
+        //获取类接口信息
+        ClassNode cn = new ClassNode()
+        cr.accept(cn, 0)
+        List<AnnotationNode> annotations = cn.visibleAnnotations//获取声明的所有注解
+        int priority = 99//默认优先级最低
+        if (annotations != null) {//便利注解
+            for (AnnotationNode annotationNode : annotations) {
+                //获取注解的描述信息
+                String desc = annotationNode.desc.replaceAll("/", ".")
+                String annotation = desc.substring(1, desc.length() - 1)
+                if ("cn.chenchl.easycomponent.lib.EasyInitParam" == annotation) {//包含注解的情况下
+                    //获取注解的属性名对应的值，（values是一个集合，它将注解的属性和属性值都放在了values中，通常奇数为值偶数为属性名）
+                    priority = annotationNode.values.get(1)
+                }
+            }
+        }
+        System.out.println("the class ${cn.name} impl IEasyInit and priority is ${priority}")
+        return priority
+    }
+
     void injectInitCodeByASM() {
+        Collections.sort(listInit, new Comparator<InitClass>() {
+            @Override
+            int compare(InitClass o1, InitClass o2) {
+                return o1 <=> o2
+            }
+        })
         listInit.each {
             System.out.println("init class is ${it.className}")
         }
@@ -225,8 +261,14 @@ class ComponentInitTransform extends Transform {
                 && "R.class" != name && "BuildConfig.class" != name)
     }
 
-    static class InitClass {
+    static class InitClass implements Comparable<InitClass> {
         String className
+        int priority
+
+        @Override
+        int compareTo(@NotNull InitClass o) {
+            return priority - o.priority
+        }
     }
 
 }
