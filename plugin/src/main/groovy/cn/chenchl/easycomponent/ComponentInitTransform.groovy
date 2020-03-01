@@ -70,7 +70,9 @@ class ComponentInitTransform extends Transform {
                 transformInvocation.getReferencedInputs(),
                 transformInvocation.getOutputProvider(),
                 transformInvocation.isIncremental());*/
-        System.out.println("ComponentInit transform start")
+        System.out.println("========================")
+        System.out.println("EasyComponent ComponentInit transform start!")
+        System.out.println("========================")
         def startTime = System.currentTimeMillis()
         //step1 获取application的classname
         getApplicationClassName()
@@ -93,7 +95,9 @@ class ComponentInitTransform extends Transform {
             }
         }
         def endTime = System.currentTimeMillis()
-        System.out.println("ComponentInit transform end castTime = ${endTime - startTime}")
+        System.out.println("========================")
+        System.out.println("EasyComponent ComponentInit transform end castTime = ${endTime - startTime}")
+        System.out.println("========================")
 
     }
 
@@ -167,7 +171,6 @@ class ComponentInitTransform extends Transform {
             //读取实现了IEasyInit的class记录到listInit中
             if (checkClassFile(entryName)) {
                 //class文件处理
-                System.out.println("deal with \"jar\" class file = ${entryName}")
                 ClassReader cr = new ClassReader(IOUtils.toByteArray(inputStream))
                 if (cr.className.replaceAll("/", ".") == appName) {//是application时跳出本次循环
                     System.out.println("the class ${cr.className} is application")
