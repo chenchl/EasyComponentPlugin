@@ -7,6 +7,7 @@
 
 ### 更新日志
 
+- 0.4.2 新增初始化application注入优先级注解实现
 - 0.4.0 新增自动插入初始化代码到application的处理 使用gradle transform+asm实现
 - 0.2.0 初次发布
 
@@ -22,7 +23,7 @@
           maven { url 'https://jitpack.io' }
       }
       dependencies {
-          classpath 'com.github.chenchl:EasyComponentPlugin:0.4.0'
+          classpath 'com.github.chenchl:EasyComponentPlugin:0.4.2'
       }
   }
   ```
@@ -69,7 +70,7 @@
 
   ```groovy
   dependencies {
-      api 'com.github.chenchl.EasyComponentPlugin:lib:0.4.0'
+      api 'com.github.chenchl.EasyComponentPlugin:lib:0.4.2'
   }
   ```
 
@@ -83,6 +84,8 @@
 - step3：在需要执行初始化代码的module中创建对应继承IEasyInit接口的class实现类，并将初始化代码写在init方法中
 
   ```java
+  //可使用注解EasyInitParam来指定组件初始化代码插入application的顺序 priority 0~99 代表优先级从高到低 如不添加该注解则默认优先级最低（99）
+  @EasyInitParam(priority = 4)
   public class ComponentAInit implements IEasyInit {
       @Override
       public void init(Context context) {
