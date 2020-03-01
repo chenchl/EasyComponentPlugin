@@ -41,7 +41,7 @@ class AppAutoInitClassVisitor extends ClassVisitor {
         private ArrayList<ComponentInitTransform.InitClass> list
 
         protected AppOnCreateAdapter(MethodVisitor mv, int access, String name, String desc, List<ComponentInitTransform.InitClass> list) {
-            super(ASM5, mv, access, name, desc)
+            super(Opcodes.ASM5, mv, access, name, desc)
             this.list = list
         }
 
@@ -54,11 +54,11 @@ class AppAutoInitClassVisitor extends ClassVisitor {
         protected void onMethodExit(int opcode) {
             //遍历插入
             list.each {
-                mv.visitTypeInsn(NEW, it.className)
-                mv.visitInsn(DUP)
-                mv.visitMethodInsn(INVOKESPECIAL, it.className, "<init>", "()V", false)
-                mv.visitVarInsn(ALOAD, 0)
-                mv.visitMethodInsn(INVOKEVIRTUAL, it.className, "init", "(Landroid/content/Context;)V", false)
+                mv.visitTypeInsn(Opcodes.NEW, it.className)
+                mv.visitInsn(Opcodes.DUP)
+                mv.visitMethodInsn(Opcodes.INVOKESPECIAL, it.className, "<init>", "()V", false)
+                mv.visitVarInsn(Opcodes.ALOAD, 0)
+                mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, it.className, "init", "(Landroid/content/Context;)V", false)
             }
         }
     }
